@@ -6,7 +6,9 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.widget.TextView;
 
+import java.security.InvalidKeyException;
 import java.security.MessageDigest;
+import javax.crypto.interfaces.*;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
 import java.net.*;
@@ -109,12 +111,13 @@ public class Lifestream extends Activity {
 	        
 	        String signedParams = signRequest("GET", "http://api.oscar.aol.com/aim/startSession", data, sessionKey);
         	// Send data
-            URL url = new URL("http://api.oscar.aol.com/aim/startSession");
+	        String urlStr = "http://api.oscar.aol.com/aim/startSession?" + signedParams;
+            URL url = new URL(urlStr);
             URLConnection conn = url.openConnection();
             conn.setDoOutput(true);
-            OutputStreamWriter wr = new OutputStreamWriter(conn.getOutputStream());
-            wr.write(signedParams);
-            wr.flush();
+            //OutputStreamWriter wr = new OutputStreamWriter(conn.getOutputStream());
+            //wr.write(signedParams);
+            //wr.flush();
         
             // Get the response
             BufferedReader rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));
@@ -141,7 +144,7 @@ public class Lifestream extends Activity {
 	        	    setContentView(tv);
 	        	}
             }
-	        wr.close();
+	        //wr.close();
 	        rd.close(); 
 	        
 		} catch (IOException e) {
@@ -152,18 +155,44 @@ public class Lifestream extends Activity {
     
     private String setSessionKey(String sessionSecret, String password) {
 		String bStr = "";
-        byte[] rawSessionKey = hmacSHA256(sessionSecret, "maryland");
+		
+		javax.crypto.spec.SecretKeySpec keySpec = new javax.crypto.spec.SecretKeySpec(password.getBytes(), "HmacSHA256");
+		javax.crypto.Mac mac;
+		try {
+			mac = javax.crypto.Mac.getInstance("HmacSHA256");
+			mac.init(keySpec);
+
+			String sessionKey = new String(Base64.encodeBase64(mac.doFinal(sessionSecret.getBytes())));
+			return sessionKey.trim();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return null;
+        /*byte[] rawSessionKey = hmacSHA256(sessionSecret, "maryland");
         bStr = new String(Base64.encodeBase64(rawSessionKey));
-        return bStr.trim();
+        return bStr.trim();*/
 	}
 
-	private String signRequest(String postType, String baseURL, String queryString, String sessionKey){
-		try{
-		String fullRequest = new String(postType + "&" + java.net.URLEncoder.encode(baseURL, "UTF-8") + "&" + java.net.URLEncoder.encode(queryString.toString(), "UTF-8"));
+	private String signRequest(String postType, String baseURL, String queryString, String sessionKey)
+	{
+		javax.crypto.spec.SecretKeySpec keySpec = new javax.crypto.spec.SecretKeySpec(sessionKey.getBytes(), "HmacSHA256");
+		javax.crypto.Mac mac;
+		try {
+			String fullRequest = new String(postType + "&" + java.net.URLEncoder.encode(baseURL, "UTF-8") + "&" + java.net.URLEncoder.encode(queryString.toString(), "UTF-8"));
+			mac = javax.crypto.Mac.getInstance("HmacSHA256");
+			mac.init(keySpec);
+
+			String strKey = new String(Base64.encodeBase64(mac.doFinal(fullRequest.getBytes())));
+			strKey.trim();
+			return queryString + "&sig_sha256=" + java.net.URLEncoder.encode(strKey, "UTF-8");
+		
+/*		try{
+		
         byte[] hashedReq = hmacSHA256(fullRequest, sessionKey);
         String signature = new String(Base64.encodeBase64(hashedReq));
         signature.trim();
-        return queryString + "&sig_sha256=" + java.net.URLEncoder.encode(signature, "UTF-8");
+        return queryString + "&sig_sha256=" + java.net.URLEncoder.encode(signature, "UTF-8");*/
 		}catch(Exception ex){
 		}
 		return null;
