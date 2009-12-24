@@ -3,6 +3,9 @@
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="src" path="gen"/>
 	<classpathentry kind="con" path="com.android.ide.eclipse.adt.ANDROID_FRAMEWORK"/>
-	<classpathentry kind="lib" path="/Users/gbcypes/Documents/workspace/AIM Lifestream/inc/commons-codec-1.4.jar"/>
+	<classpathentry kind="lib" path="inc/commons-codec-1.4.jar"/>
+	<classpathentry kind="lib" path="inc/httpclient-4.0.1.jar"/>
+	<classpathentry kind="lib" path="inc/httpmime-4.0.1.jar"/>
+	<classpathentry kind="lib" path="inc/json-20090211.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
