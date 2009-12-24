@@ -114,37 +114,17 @@ public class Lifestream extends Activity {
 	        String urlStr = "http://api.oscar.aol.com/aim/startSession?" + signedParams;
             URL url = new URL(urlStr);
             URLConnection conn = url.openConnection();
-            conn.setDoOutput(true);
-            //OutputStreamWriter wr = new OutputStreamWriter(conn.getOutputStream());
-            //wr.write(signedParams);
-            //wr.flush();
-        
+            conn.setDoOutput(true);        
             // Get the response
             BufferedReader rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+            StringBuilder fullResponse = new StringBuilder();
             String line;
 	        String params[];
 	        String delimeter = "&";
             while ((line = rd.readLine()) != null) {
-	        	if (line.contains("statusCode=200"))
-	        	{
-	        		params = line.split(delimeter);
-	        		Map<String, String> map2 = new HashMap<String, String>();
-	        		for(int i =0; i < params.length ; i++)
-	        		{
-	        			String str = params[i];
-	        			int equal = str.indexOf("=");
-	        			String key = str.substring(0, equal);
-	        			equal ++;
-	        			String val = str.substring(equal);
-	        			map2.put(key, val);
-	        		}
-	        		
-	        	    TextView tv = new TextView(this);
-	        	    tv.setText("Start Session Success");
-	        	    setContentView(tv);
-	        	}
+            	fullResponse.append(line);
+            	JSONObject obj = new JSONObject(fullResponse.toString());
             }
-	        //wr.close();
 	        rd.close(); 
 	        
 		} catch (IOException e) {
@@ -169,9 +149,6 @@ public class Lifestream extends Activity {
 			e.printStackTrace();
 		}
 		return null;
-        /*byte[] rawSessionKey = hmacSHA256(sessionSecret, "maryland");
-        bStr = new String(Base64.encodeBase64(rawSessionKey));
-        return bStr.trim();*/
 	}
 
 	private String signRequest(String postType, String baseURL, String queryString, String sessionKey)
@@ -186,13 +163,6 @@ public class Lifestream extends Activity {
 			String strKey = new String(Base64.encodeBase64(mac.doFinal(fullRequest.getBytes())));
 			strKey.trim();
 			return queryString + "&sig_sha256=" + java.net.URLEncoder.encode(strKey, "UTF-8");
-		
-/*		try{
-		
-        byte[] hashedReq = hmacSHA256(fullRequest, sessionKey);
-        String signature = new String(Base64.encodeBase64(hashedReq));
-        signature.trim();
-        return queryString + "&sig_sha256=" + java.net.URLEncoder.encode(signature, "UTF-8");*/
 		}catch(Exception ex){
 		}
 		return null;
