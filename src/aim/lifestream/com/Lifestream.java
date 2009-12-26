@@ -5,11 +5,9 @@ import android.os.Bundle;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.widget.TextView;
+import android.widget.Button;
+import android.view.View;
 
-import java.security.InvalidKeyException;
-import java.security.MessageDigest;
-import javax.crypto.interfaces.*;
-import java.security.NoSuchAlgorithmException;
 import java.util.*;
 import java.net.*;
 import java.io.*;
@@ -23,7 +21,13 @@ public class Lifestream extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
         
-        SignOn();
+        // Capture our button from layout
+        Button button = (Button)findViewById(R.id.cancel);
+        // Register the onClick listener with the implementation above
+        button.setOnClickListener(new Button.OnClickListener() { public void onClick (View v){ QuitApp(); }});
+        
+        Button signOnBtn = (Button)findViewById(R.id.ok);
+        signOnBtn.setOnClickListener(new Button.OnClickListener() { public void onClick (View v){ SignOn(); }});
     }
     
     public void SignOn()
@@ -123,7 +127,6 @@ public class Lifestream extends Activity {
 	        String delimeter = "&";
             while ((line = rd.readLine()) != null) {
             	fullResponse.append(line);
-            	JSONObject obj = new JSONObject(fullResponse.toString());
             }
 	        rd.close(); 
 	        
@@ -167,53 +170,9 @@ public class Lifestream extends Activity {
 		}
 		return null;
 	}
-
-	private byte[] hmacSHA256(String fullRequest, String sessionKey) 
-	{
-    	byte[] key = sessionKey.getBytes();
-    	int block_size = 64;
-    	
-        // Get the SHA-256 Message Digest.
-        MessageDigest sha256MD = null;
-        try {
-        	sha256MD = MessageDigest.getInstance("SHA-256");
-        } catch (NoSuchAlgorithmException e) {
-        	e.printStackTrace();
-            System.err.println("This could be considered a problem. " + e.toString());
-        }
-
-        // if the key is bigger then the block size, hash it and use that
-        if (key.length > block_size) {
-        	sha256MD.update(key);
-            key = sha256MD.digest();
-            sha256MD.reset();
-        }
-
-        // If the key is less then the block size, pad it with zero bytes
-        byte paddedKey[] = new byte[block_size];
-        for (int i = 0; i < key.length; ++i) paddedKey[i] = key[i];
-        for (int i = key.length; i < paddedKey.length; ++i) paddedKey[i] = 0;
-
-        // XOR (bitwise exclusive-OR) the padded key with 64 bytes of 0x36. (ipad)
-        for (int i = 0; i < block_size; ++i) paddedKey[i] ^= 0x36;
-        
-        //append the message bytes to the XOR'd paddedKey
-        sha256MD.update(paddedKey);
-        sha256MD.update(fullRequest.getBytes());
-        //apply the hash function (create the "Inner Hash")
-        byte[] hash = sha256MD.digest();
-        sha256MD.reset();
-
-        // XOR (bitwise exclusive-OR) the padded key with 64 bytes of 0x5c. (opad)
-        // don't forget to counter-act the first XOR above
-        for (int i = 0; i < 64; ++i) paddedKey[i] ^= (0x36 ^ 0x5c);
-        // append the inner hash bytes to the second XOR'd paddedKey
-        sha256MD.update(paddedKey);
-        sha256MD.update(hash);
-        //apply the hash function (create the "Outer Hash")
-        hash = sha256MD.digest(); 
-        
-        //return the byte array for the hash (return the digest value)
-        return hash;
-	}
+	
+    public void QuitApp()
+    {
+    	this.finish();
+    }
 }
